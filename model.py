@@ -24,6 +24,7 @@ class RNNModel(nn.Module):
         self.drop = nn.Dropout(dropout)  # dropout层
         self.encoder = nn.Embedding(v_size, em_dim)  # encoder是一个embedding层
 
+        print('rnn_type: ' + str(rnn_type))
         if rnn_type in ['RNN', 'LSTM', 'GRU']:
             self.rnn = getattr(nn, rnn_type)(em_dim, hi_dim, n_layers, dropout=dropout)
         else:

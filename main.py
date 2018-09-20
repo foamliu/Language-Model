@@ -35,7 +35,7 @@ class Config(object):
     """RNNLM模型配置项"""
     embedding_dim = 200  # 词向量维度
 
-    rnn_type = 'LSTM'  # 支持RNN/LSTM/GRU
+    rnn_type = 'GRU'  # 支持RNN/LSTM/GRU
     hidden_dim = 200  # 隐藏层维度
     num_layers = 2  # RNN 层数
 
@@ -77,10 +77,10 @@ def get_batch(source, i, seq_len, evaluation=False):
 
 def repackage_hidden(h):
     """用新的变量重新包装隐藏层，将它们从历史中分离。"""
-    if type(h) == Variable:  # rnn/gru
-        return Variable(h.data)
-    else:  # lstm
-        return tuple(repackage_hidden(v) for v in h)
+    #if type(h) == Variable:  # rnn/gru
+    return Variable(h.data)
+    #else:  # lstm
+    #    return tuple(repackage_hidden(v) for v in h)
 
 
 def get_time_dif(start_time):
@@ -138,6 +138,7 @@ def train():
         total_loss = 0.0
         model.train()  # 在训练模式下dropout才可用。
         hidden = model.init_hidden(config.batch_size)  # 初始化隐藏层参数
+        print('hidden: ' + str(hidden))
 
         for ibatch, i in enumerate(range(0, train_len - 1, seq_len)):
             data, targets = get_batch(train_data, i, seq_len)  # 取一个批次的数据
