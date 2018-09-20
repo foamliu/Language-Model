@@ -138,7 +138,7 @@ def train():
         total_loss = 0.0
         model.train()  # 在训练模式下dropout才可用。
         hidden = model.init_hidden(config.batch_size)  # 初始化隐藏层参数
-        print('hidden: ' + str(hidden))
+        # print('hidden: ' + str(hidden))
 
         for ibatch, i in enumerate(range(0, train_len - 1, seq_len)):
             data, targets = get_batch(train_data, i, seq_len)  # 取一个批次的数据
