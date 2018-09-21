@@ -77,10 +77,7 @@ def get_batch(source, i, seq_len, evaluation=False):
 
 def repackage_hidden(h):
     """用新的变量重新包装隐藏层，将它们从历史中分离。"""
-    # if type(h) == Variable:  # rnn/gru
     return Variable(h.data)
-    # else:  # lstm
-    #    return tuple(repackage_hidden(v) for v in h)
 
 
 def get_time_dif(start_time):
@@ -112,6 +109,53 @@ def generate(model, idx2word, word_len=200, temperature=1.0):
 
 
 def train():
+    model.train()  # 在训练模式下dropout才可用。
+    hidden = model.init_hidden(config.batch_size)  # 初始化隐藏层参数
+    # print('hidden: ' + str(hidden))
+
+    for ibatch, i in enumerate(range(0, train_len - 1, seq_len)):
+        data, targets = get_batch(train_data, i, seq_len)  # 取一个批次的数据
+        # 在每批开始之前，将隐藏的状态与之前产生的结果分离。
+        # 如果不这样做，模型会尝试反向传播到数据集的起点。
+        hidden = repackage_hidden(hidden)
+        model.zero_grad()
+
+        output, hidden = model(data, hidden)
+        loss = criterion(output.view(-1, config.vocab_size), targets)
+        loss.backward()  # 反向传播
+
+        # `clip_grad_norm` 有助于防止RNNs/LSTMs中的梯度爆炸问题。
+        torch.nn.utils.clip_grad_norm_(model.parameters(), config.clip)
+        for p in model.parameters():  # 梯度更新
+            p.data.add_(-lr, p.grad.data)
+
+        total_loss += loss.data  # loss累计
+
+        if ibatch % config.log_interval == 0 and ibatch > 0:  # 每隔多少个批次输出一次状态
+            cur_loss = total_loss.item() / config.log_interval
+            elapsed = get_time_dif(start_time)
+            print("Epoch {:3d}, {:5d}/{:5d} batches, lr {:2.3f}, loss {:5.2f}, ppl {:8.2f}, time {}".format(
+                epoch, ibatch, train_len // seq_len, lr, cur_loss, math.exp(cur_loss), elapsed))
+            total_loss = 0.0
+    lr /= 4.0  # 在一轮迭代完成后，尝试缩小学习率
+
+
+def generate_flow(epoch=3):
+    """读取存储的模型，生成新词"""
+    corpus = Corpus(train_dir)
+    config = Config()
+    config.vocab_size = len(corpus.dictionary)
+
+    model = RNNModel(config)
+    model_file = os.path.join(save_dir, model_name.format(epoch))
+    assert os.path.exists(model_file), 'File %s does not exist.' % model_file
+    model.load_state_dict(torch.load(model_file, map_location=lambda storage, loc: storage))
+
+    word_list = generate(model, corpus.dictionary.idx2word, word_len=50)
+    print(''.join(word_list))
+
+
+if __name__ == '__main__':
     # 载入数据与配置模型
     print("Loading data...")
     corpus = Corpus(train_dir)
@@ -136,36 +180,8 @@ def train():
     print("Training and generating...")
     for epoch in range(1, config.num_epochs + 1):  # 多轮次训练
         total_loss = 0.0
-        model.train()  # 在训练模式下dropout才可用。
-        hidden = model.init_hidden(config.batch_size)  # 初始化隐藏层参数
-        # print('hidden: ' + str(hidden))
 
-        for ibatch, i in enumerate(range(0, train_len - 1, seq_len)):
-            data, targets = get_batch(train_data, i, seq_len)  # 取一个批次的数据
-            # 在每批开始之前，将隐藏的状态与之前产生的结果分离。
-            # 如果不这样做，模型会尝试反向传播到数据集的起点。
-            hidden = repackage_hidden(hidden)
-            model.zero_grad()
-
-            output, hidden = model(data, hidden)
-            loss = criterion(output.view(-1, config.vocab_size), targets)
-            loss.backward()  # 反向传播
-
-            # `clip_grad_norm` 有助于防止RNNs/LSTMs中的梯度爆炸问题。
-            torch.nn.utils.clip_grad_norm_(model.parameters(), config.clip)
-            for p in model.parameters():  # 梯度更新
-                p.data.add_(-lr, p.grad.data)
-
-            total_loss += loss.data  # loss累计
-
-            if ibatch % config.log_interval == 0 and ibatch > 0:  # 每隔多少个批次输出一次状态
-                cur_loss = total_loss.item() / config.log_interval
-                elapsed = get_time_dif(start_time)
-                print("Epoch {:3d}, {:5d}/{:5d} batches, lr {:2.3f}, loss {:5.2f}, ppl {:8.2f}, time {}".format(
-                    epoch, ibatch, train_len // seq_len, lr, cur_loss, math.exp(cur_loss), elapsed))
-                total_loss = 0.0
-        lr /= 4.0  # 在一轮迭代完成后，尝试缩小学习率
-
+        train()
         # 每隔多少轮次保存一次模型参数
         if epoch % config.save_interval == 0:
             torch.save(model.state_dict(), os.path.join(save_dir, model_name.format(epoch)))
@@ -173,27 +189,3 @@ def train():
         print()
         print(''.join(generate(model, corpus.dictionary.idx2word)))
         print()
-
-
-def generate_flow(epoch=3):
-    """读取存储的模型，生成新词"""
-    corpus = Corpus(train_dir)
-    config = Config()
-    config.vocab_size = len(corpus.dictionary)
-
-    model = RNNModel(config)
-    model_file = os.path.join(save_dir, model_name.format(epoch))
-    assert os.path.exists(model_file), 'File %s does not exist.' % model_file
-    model.load_state_dict(torch.load(model_file, map_location=lambda storage, loc: storage))
-
-    word_list = generate(model, corpus.dictionary.idx2word, word_len=50)
-    print(''.join(word_list))
-
-
-if __name__ == '__main__':
-    if args.mode == 'train':
-        train()
-    elif args.mode == 'gen':
-        generate_flow(args.epoch)
-    else:
-        raise ValueError("""mode error.""")
