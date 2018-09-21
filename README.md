@@ -8,13 +8,14 @@
 
 ## 模型
 
+<pre>
 RNNModel(
   (drop): Dropout(p=0.5)
   (encoder): Embedding(3719, 200)
   (rnn): GRU(200, 200, num_layers=2, dropout=0.5)
   (decoder): Linear(in_features=200, out_features=3719, bias=True)
-)
-
+)<br>
+</pre>
 
 ## 生成效果
 
