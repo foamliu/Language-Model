@@ -117,7 +117,7 @@ def train():
         total_loss += loss.item()  # loss累计
 
         if ibatch % config.log_interval == 0 and ibatch > 0:  # 每隔多少个批次输出一次状态
-            cur_loss = total_loss.item() / config.log_interval
+            cur_loss = total_loss / config.log_interval
             elapsed = get_time_dif(start_time)
             print("Epoch {:3d}, {:5d}/{:5d} batches, lr {:2.3f}, loss {:5.2f}, ppl {:8.2f}, time {}".format(
                 epoch, ibatch, train_len // seq_len, lr, cur_loss, math.exp(cur_loss), elapsed))
