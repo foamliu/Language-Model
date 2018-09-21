@@ -1,3 +1,9 @@
+<style>
+pre {
+ white-space: pre-wrap;
+}
+</style>
+
 # Language-Model
 
 基于 PyTorch [范例](https://github.com/pytorch/examples/tree/master/word_language_model) 实现中文语言模型。
@@ -20,12 +26,6 @@ RNNModel(
 ## 生成效果
 
 ### 《三体》
-
-<style>
-pre {
- white-space: pre-wrap;
-}
-</style>
 
 <pre>
 Epoch   1,   500/ 2994 batches, lr 1.000, loss  6.43, ppl   621.43, time 0:00:08
