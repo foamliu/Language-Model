@@ -6,6 +6,16 @@
 
 刘慈欣作品全集 + 三国演义
 
+## 模型
+
+RNNModel(
+  (drop): Dropout(p=0.5)
+  (encoder): Embedding(3719, 200)
+  (rnn): GRU(200, 200, num_layers=2, dropout=0.5)
+  (decoder): Linear(in_features=200, out_features=3719, bias=True)
+)
+
+
 ## 生成效果
 
 ### 刘慈欣作品全集
