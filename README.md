@@ -20,6 +20,17 @@ RNNModel(
 ## 生成效果
 
 ### 《三体》
+(setq markdown-xhtml-header-content
+      "<style type='text/css'>
+pre {
+ white-space: pre-wrap;       /* css-3 */
+ white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+ white-space: -pre-wrap;      /* Opera 4-6 */
+ white-space: -o-pre-wrap;    /* Opera 7 */
+ word-wrap: break-word;       /* Internet Explorer 5.5+ */
+}
+</style>")
+
 <pre>
 Epoch   1,   500/ 2994 batches, lr 1.000, loss  6.43, ppl   621.43, time 0:00:08
 Epoch   1,  1000/ 2994 batches, lr 1.000, loss  6.21, ppl   497.82, time 0:00:07
