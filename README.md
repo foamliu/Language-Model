@@ -1,6 +1,6 @@
 # Language-Model
 
-基于 PyTorch 范例实现中文语言模型。
+基于 PyTorch [范例](https://github.com/pytorch/examples/tree/master/word_language_model) 实现中文语言模型。
 
 ## 数据集
 
