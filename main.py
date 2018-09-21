@@ -152,7 +152,7 @@ def train():
             loss.backward()  # 反向传播
 
             # `clip_grad_norm` 有助于防止RNNs/LSTMs中的梯度爆炸问题。
-            torch.nn.utils.clip_grad_norm(model.parameters(), config.clip)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), config.clip)
             for p in model.parameters():  # 梯度更新
                 p.data.add_(-lr, p.grad.data)
 
