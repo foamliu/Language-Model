@@ -1,5 +1,7 @@
 # Language-Model
 
+基于 PyTorch 范例实现中文语言模型。
+
 ## 数据集
 
 刘慈欣作品全集
