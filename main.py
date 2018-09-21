@@ -29,7 +29,7 @@ class Config(object):
     seq_len = 30  # 序列长度
 
     clip = 0.25  # 用于梯度规范化
-    learning_rate = 20  # 初始学习率
+    learning_rate = 1  # 初始学习率
 
     num_epochs = 50  # 迭代轮次
     log_interval = 500  # 每隔多少个批次输出一次状态
@@ -191,7 +191,7 @@ if __name__ == '__main__':
                 best_train_loss = train_loss
             else:
                 # 如果验证数据集中未见任何改进，则缩小学习率。
-                lr /= 4.0
+                lr /= 2.0
 
             # 每隔多少轮次保存一次模型参数
             if epoch % config.save_interval == 0:
