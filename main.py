@@ -14,7 +14,7 @@ from torch.autograd import Variable
 from model import RNNModel
 from data_zh import Corpus
 
-train_dir = 'data/sanguoyanyi.txt'
+train_dir = 'data/santi.txt'
 filename = str(os.path.basename(train_dir).split('.')[0])
 
 # 用于保存模型参数
