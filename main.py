@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import argparse
-import os
 import math
+import os
 import time
 from datetime import timedelta
 
@@ -11,8 +11,8 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
-from model import RNNModel
 from data_zh import Corpus
+from model import RNNModel
 
 train_dir = 'data/santi.txt'
 filename = str(os.path.basename(train_dir).split('.')[0])
@@ -77,9 +77,9 @@ def get_batch(source, i, seq_len, evaluation=False):
 
 def repackage_hidden(h):
     """用新的变量重新包装隐藏层，将它们从历史中分离。"""
-    #if type(h) == Variable:  # rnn/gru
+    # if type(h) == Variable:  # rnn/gru
     return Variable(h.data)
-    #else:  # lstm
+    # else:  # lstm
     #    return tuple(repackage_hidden(v) for v in h)
 
 
@@ -170,7 +170,9 @@ def train():
         if epoch % config.save_interval == 0:
             torch.save(model.state_dict(), os.path.join(save_dir, model_name.format(epoch)))
 
+        print()
         print(''.join(generate(model, corpus.dictionary.idx2word)))
+        print()
 
 
 def generate_flow(epoch=3):
