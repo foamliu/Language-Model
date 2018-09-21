@@ -74,7 +74,7 @@ def generate(model, idx2word, word_len=200, temperature=1.0):
     """生成一定数量的文本，temperature结合多项式分布可增添抽样的多样性。"""
     model.eval()
     hidden = model.init_hidden(1)  # batch_size为1
-    inputs = Variable(torch.rand(1, 1).mul(len(idx2word)).long(), volatile=True)  # 随机选取一个字作为开始
+    inputs = Variable(torch.rand(1, 1).mul(len(idx2word)).long())  # 随机选取一个字作为开始
     if use_cuda:
         inputs = inputs.cuda()
 
@@ -197,9 +197,10 @@ if __name__ == '__main__':
             if epoch % config.save_interval == 0:
                 torch.save(model.state_dict(), os.path.join(save_dir, model_name.format(epoch)))
 
-            print()
-            print(''.join(generate(model, corpus.dictionary.idx2word)))
-            print()
+            with torch.no_grad():
+                print()
+                print(''.join(generate(model, corpus.dictionary.idx2word)))
+                print()
     except KeyboardInterrupt:
         print('-' * 89)
         print('Exiting from training early')
