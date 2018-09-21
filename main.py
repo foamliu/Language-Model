@@ -46,7 +46,7 @@ class Config(object):
     seq_len = 30  # 序列长度
 
     clip = 0.25  # 用于梯度规范化
-    learning_rate = 0.02  # 初始学习率
+    learning_rate = 20  # 初始学习率
 
     num_epochs = 50  # 迭代轮次
     log_interval = 500  # 每隔多少个批次输出一次状态
@@ -164,7 +164,7 @@ def train():
                 print("Epoch {:3d}, {:5d}/{:5d} batches, lr {:2.3f}, loss {:5.2f}, ppl {:8.2f}, time {}".format(
                     epoch, ibatch, train_len // seq_len, lr, cur_loss, math.exp(cur_loss), elapsed))
                 total_loss = 0.0
-        # lr /= 4.0  # 在一轮迭代完成后，尝试缩小学习率
+        lr /= 4.0  # 在一轮迭代完成后，尝试缩小学习率
 
         # 每隔多少轮次保存一次模型参数
         if epoch % config.save_interval == 0:
