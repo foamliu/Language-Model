@@ -1,7 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import argparse
 import math
 import os
 import time
@@ -13,22 +12,6 @@ from torch.autograd import Variable
 
 from data_zh import Corpus
 from model import RNNModel
-
-train_dir = 'data/santi.txt'
-filename = str(os.path.basename(train_dir).split('.')[0])
-
-# 用于保存模型参数
-save_dir = 'checkpoints/' + filename
-if not os.path.exists(save_dir):
-    os.makedirs(save_dir)
-model_name = filename + '_{}.pt'
-
-use_cuda = torch.cuda.is_available()
-
-parser = argparse.ArgumentParser(description='PyTorch Chinese Language Model')
-parser.add_argument('--mode', type=str, default='train', help='train or gen.')
-parser.add_argument('--epoch', type=int, default=3, help='the epoch of parameter to be loaded.')
-args = parser.parse_args()
 
 
 class Config(object):
@@ -110,6 +93,8 @@ def generate(model, idx2word, word_len=200, temperature=1.0):
 
 def train():
     model.train()  # 在训练模式下dropout才可用。
+    total_loss = 0.0
+    start_time = time.time()
     hidden = model.init_hidden(config.batch_size)  # 初始化隐藏层参数
     # print('hidden: ' + str(hidden))
 
@@ -129,7 +114,7 @@ def train():
         for p in model.parameters():  # 梯度更新
             p.data.add_(-lr, p.grad.data)
 
-        total_loss += loss.data  # loss累计
+        total_loss += loss.item()  # loss累计
 
         if ibatch % config.log_interval == 0 and ibatch > 0:  # 每隔多少个批次输出一次状态
             cur_loss = total_loss.item() / config.log_interval
@@ -137,7 +122,9 @@ def train():
             print("Epoch {:3d}, {:5d}/{:5d} batches, lr {:2.3f}, loss {:5.2f}, ppl {:8.2f}, time {}".format(
                 epoch, ibatch, train_len // seq_len, lr, cur_loss, math.exp(cur_loss), elapsed))
             total_loss = 0.0
-    lr /= 4.0  # 在一轮迭代完成后，尝试缩小学习率
+            start_time = time.time()
+
+    return loss.item()
 
 
 def generate_flow(epoch=3):
@@ -156,6 +143,17 @@ def generate_flow(epoch=3):
 
 
 if __name__ == '__main__':
+    train_dir = 'data/santi.txt'
+    filename = str(os.path.basename(train_dir).split('.')[0])
+
+    # 用于保存模型参数
+    save_dir = 'checkpoints/' + filename
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+    model_name = filename + '_{}.pt'
+
+    use_cuda = torch.cuda.is_available()
+
     # 载入数据与配置模型
     print("Loading data...")
     corpus = Corpus(train_dir)
@@ -175,17 +173,33 @@ if __name__ == '__main__':
 
     criterion = nn.CrossEntropyLoss()
     lr = config.learning_rate  # 初始学习率
-    start_time = time.time()
+    best_train_loss = None
 
     print("Training and generating...")
-    for epoch in range(1, config.num_epochs + 1):  # 多轮次训练
-        total_loss = 0.0
+    try:
+        for epoch in range(1, config.num_epochs + 1):  # 多轮次训练
+            epoch_start_time = time.time()
+            train_loss = train()
 
-        train()
-        # 每隔多少轮次保存一次模型参数
-        if epoch % config.save_interval == 0:
-            torch.save(model.state_dict(), os.path.join(save_dir, model_name.format(epoch)))
+            print('-' * 89)
+            print('| end of epoch {:3d} | time: {:5.2f}s | train loss {:5.2f} | '
+                  'train ppl {:8.2f}'.format(epoch, (time.time() - epoch_start_time),
+                                             train_loss, math.exp(train_loss)))
+            print('-' * 89)
+            # Save the model if the validation loss is the best we've seen so far.
+            if not best_train_loss or train_loss < best_train_loss:
+                best_train_loss = train_loss
+            else:
+                # 如果验证数据集中未见任何改进，则缩小学习率。
+                lr /= 4.0
 
-        print()
-        print(''.join(generate(model, corpus.dictionary.idx2word)))
-        print()
+            # 每隔多少轮次保存一次模型参数
+            if epoch % config.save_interval == 0:
+                torch.save(model.state_dict(), os.path.join(save_dir, model_name.format(epoch)))
+
+            print()
+            print(''.join(generate(model, corpus.dictionary.idx2word)))
+            print()
+    except KeyboardInterrupt:
+        print('-' * 89)
+        print('Exiting from training early')
