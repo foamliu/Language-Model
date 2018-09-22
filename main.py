@@ -145,7 +145,7 @@ def generate_flow(epoch=3):
 
 
 if __name__ == '__main__':
-    train_dir = 'data/sanguoyanyi.txt'
+    train_dir = 'data/santi.txt'
     filename = str(os.path.basename(train_dir).split('.')[0])
 
     # 用于保存模型参数
