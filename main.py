@@ -104,15 +104,17 @@ def train():
         # 如果不这样做，模型会尝试反向传播到数据集的起点。
         hidden = repackage_hidden(hidden)
         model.zero_grad()
+        optimizer.zero_grad()
 
         output, hidden = model(data, hidden)
         loss = criterion(output.view(-1, config.vocab_size), targets)
         loss.backward()  # 反向传播
+        optimizer.step()
 
         # `clip_grad_norm` 有助于防止RNNs/LSTMs中的梯度爆炸问题。
-        torch.nn.utils.clip_grad_norm_(model.parameters(), config.clip)
-        for p in model.parameters():  # 梯度更新
-            p.data.add_(-lr, p.grad.data)
+        # torch.nn.utils.clip_grad_norm_(model.parameters(), config.clip)
+        # for p in model.parameters():  # 梯度更新
+        #     p.data.add_(-lr, p.grad.data)
 
         total_loss += loss.item()  # loss累计
 
@@ -174,6 +176,7 @@ if __name__ == '__main__':
     criterion = nn.CrossEntropyLoss()
     lr = config.learning_rate  # 初始学习率
     best_train_loss = None
+    optimizer = torch.optim.Adam(model.parameters())
 
     print("Training and generating...")
     try:
